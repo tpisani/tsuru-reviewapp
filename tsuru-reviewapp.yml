@@ -1,0 +1,4 @@
+baseapp: sample-app
+pool: sample-pool
+env:
+  - DEBUG=true
