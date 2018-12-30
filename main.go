@@ -1,16 +1,5 @@
 package main
 
-import (
-	"crypto/tls"
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"os"
-
-	"github.com/go-yaml/yaml"
-	"github.com/tsuru/tsuru/cmd"
-)
-
 type AppInfoResponse struct {
 	Platform string
 	Pool     string
@@ -47,6 +36,11 @@ func filterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
 }
 
 func main() {
+	execCommands()
+}
+
+/*
+func main() {
 	token := os.Getenv("TSURU_TOKEN")
 	if token == "" {
 		fmt.Println("missing Tsuru token")
@@ -58,6 +52,8 @@ func main() {
 		fmt.Println("missing Tsuru target")
 		os.Exit(1)
 	}
+
+	fmt.Println(token, target)
 
 	f, err := os.Open("./tsuru-reviewapp.yml")
 	if err != nil {
@@ -113,4 +109,20 @@ func main() {
 	}
 
 	fmt.Println(data.Platform, data.Pool)
+
+	u, err = cmd.GetURL(fmt.Sprintf("/apps/%s/env", config.BaseApp))
+	if err != nil {
+		fmt.Println("unable to get URL from target")
+		os.Exit(1)
+	}
+
+	req, _ = http.NewRequest(http.MethodGet, u, nil)
+	resp, _ = client.Do(req)
+	defer resp.Body.Close()
+
+	var envVars []EnvVar
+	json.NewDecoder(resp.Body).Decode(&envVars)
+	envVars = filterEnvVars(envVars, "NODE_ENV", "FEATURES")
+	fmt.Println(envVars)
 }
+*/

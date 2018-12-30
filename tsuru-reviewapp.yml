@@ -1,4 +1,4 @@
-baseapp: sample-app
+baseapp: apocalypse-green
 pool: sample-pool
 env:
   - DEBUG=true
