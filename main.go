@@ -1,5 +1,15 @@
 package main
 
+import (
+	"crypto/tls"
+	"fmt"
+	"net/http"
+	"os"
+
+	"github.com/tsuru/tsuru/cmd"
+	yaml "gopkg.in/yaml.v2"
+)
+
 type AppInfoResponse struct {
 	Platform string
 	Pool     string
@@ -16,6 +26,13 @@ type ReviewAppConfig struct {
 	Pool    string
 	EnvVars []string
 }
+
+var (
+	url  string
+	err  error
+	req  *http.Request
+	resp *http.Response
+)
 
 func filterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
 	filtered := make([]EnvVar, 0)
@@ -35,12 +52,8 @@ func filterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
 	return filtered
 }
 
-func main() {
-	execCommands()
-}
+func configTsuru() ReviewAppConfig {
 
-/*
-func main() {
 	token := os.Getenv("TSURU_TOKEN")
 	if token == "" {
 		fmt.Println("missing Tsuru token")
@@ -69,60 +82,20 @@ func main() {
 	}
 	f.Close()
 
+	return config
+}
+
+func main() {
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
 
-	client := cmd.NewClient(httpClient, &cmd.Context{}, &cmd.Manager{})
-
-	u, err := cmd.GetURL(fmt.Sprintf("/apps/%s", config.BaseApp))
-	if err != nil {
-		fmt.Println("unable to get URL from target")
-		os.Exit(1)
+	clientConfig := ClientConfig{
+		Client:  *httpClient,
+		Context: cmd.Context{},
+		Manager: cmd.Manager{},
 	}
-
-	req, err := http.NewRequest(http.MethodGet, u, nil)
-	if err != nil {
-		fmt.Println("unable to prepare request")
-		os.Exit(1)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Printf("unable to fetch app info: %v\n", err)
-		os.Exit(1)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("non-200 response from Tsuru")
-		os.Exit(1)
-	}
-
-	var data AppInfoResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
-	if err != nil {
-		fmt.Printf("unable to parse app info: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println(data.Platform, data.Pool)
-
-	u, err = cmd.GetURL(fmt.Sprintf("/apps/%s/env", config.BaseApp))
-	if err != nil {
-		fmt.Println("unable to get URL from target")
-		os.Exit(1)
-	}
-
-	req, _ = http.NewRequest(http.MethodGet, u, nil)
-	resp, _ = client.Do(req)
-	defer resp.Body.Close()
-
-	var envVars []EnvVar
-	json.NewDecoder(resp.Body).Decode(&envVars)
-	envVars = filterEnvVars(envVars, "NODE_ENV", "FEATURES")
-	fmt.Println(envVars)
+	execCommands(clientConfig)
 }
-*/
