@@ -13,6 +13,7 @@ import (
 type AppInfoResponse struct {
 	Platform string
 	Pool     string
+	Name     string
 }
 
 type EnvVar struct {
