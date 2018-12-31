@@ -57,7 +57,7 @@ func (p *AppInfoCommand) Run(clientConfig *ClientConfig) {
 		os.Exit(1)
 	}
 
-	fmt.Println(data.Platform, data.Pool)
+	fmt.Println(data)
 }
 
 type GetEnvCommand struct{}
