@@ -5,9 +5,16 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/tsuru/tsuru/cmd"
 )
+
+type ResultSet struct {
+	Data    map[string]interface{}
+	Timeout time.Duration
+	err     error
+}
 
 type ClientConfig struct {
 	Client  http.Client
@@ -16,13 +23,13 @@ type ClientConfig struct {
 }
 
 type Command interface {
-	Run(clientConfig *ClientConfig)
+	Run(clientConfig *ClientConfig) ResultSet
 	//RoolBack() string
 }
 
 type AppInfoCommand struct{}
 
-func (p *AppInfoCommand) Run(clientConfig *ClientConfig) {
+func (p *AppInfoCommand) Run(clientConfig *ClientConfig) ResultSet {
 
 	client := cmd.NewClient(&clientConfig.Client, &clientConfig.Context, &clientConfig.Manager)
 
@@ -50,19 +57,30 @@ func (p *AppInfoCommand) Run(clientConfig *ClientConfig) {
 		os.Exit(1)
 	}
 
-	var data AppInfoResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	appInfo := AppInfoResponse{}
+
+	err = json.NewDecoder(resp.Body).Decode(&appInfo)
 	if err != nil {
 		fmt.Printf("unable to parse app info: %v\n", err)
 		os.Exit(1)
 	}
 
-	fmt.Println(data)
+	result := map[string]interface{}{
+		"name":     appInfo.Name,
+		"platform": appInfo.Platform,
+		"pool":     appInfo.Pool,
+	}
+
+	resultSet := ResultSet{
+		Data: result,
+	}
+
+	return resultSet
 }
 
 type GetEnvCommand struct{}
 
-func (p *GetEnvCommand) Run(clientConfig *ClientConfig) {
+func (p *GetEnvCommand) Run(clientConfig *ClientConfig) ResultSet {
 
 	url, err = cmd.GetURL(fmt.Sprintf("/apps/%s/env", configTsuru().BaseApp))
 
@@ -76,9 +94,18 @@ func (p *GetEnvCommand) Run(clientConfig *ClientConfig) {
 	defer resp.Body.Close()
 
 	var envVars []EnvVar
+
 	json.NewDecoder(resp.Body).Decode(&envVars)
 	envVars = filterEnvVars(envVars, "NODE_ENV", "FEATURES")
-	fmt.Println(envVars)
+
+	envs := map[string]interface{}{
+		"envs": envVars,
+	}
+	resultSet := ResultSet{
+		Data: envs,
+	}
+
+	return resultSet
 }
 
 /*
@@ -157,7 +184,6 @@ func (p *DropCommand) Timeout() time.Duration {
 func execByName(name string, clientConfig ClientConfig) {
 	commands := map[string]Command{
 		"info": &AppInfoCommand{},
-		"envs": &GetEnvCommand{},
 	}
 	if command := commands[name]; command == nil {
 		fmt.Println("No such command found, throw error?")
@@ -173,7 +199,6 @@ func execCommands(clientConfig ClientConfig) {
 	}
 
 	for _, command := range commands {
-		command.Run(&clientConfig)
-		fmt.Println()
+		fmt.Println(command.Run(&clientConfig))
 	}
 }
