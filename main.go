@@ -49,7 +49,6 @@ func filterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
 			}
 		}
 	}
-
 	return filtered
 }
 
@@ -92,11 +91,6 @@ func main() {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
-
-	clientConfig := ClientConfig{
-		Client:  *httpClient,
-		Context: cmd.Context{},
-		Manager: cmd.Manager{},
-	}
-	execCommands(clientConfig)
+	client := cmd.NewClient(httpClient, &cmd.Context{}, &cmd.Manager{})
+	execCommands(client)
 }
