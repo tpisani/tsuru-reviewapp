@@ -93,10 +93,6 @@ func main() {
 		},
 	}
 
-	clientConfig := ClientConfig{
-		Client:  *httpClient,
-		Context: cmd.Context{},
-		Manager: cmd.Manager{},
-	}
-	execCommands(clientConfig)
+	client := cmd.NewClient(httpClient, &cmd.Context{}, &cmd.Manager{})
+	execCommands(client)
 }

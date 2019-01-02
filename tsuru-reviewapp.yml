@@ -1,4 +1,4 @@
 baseapp: apocalypse-green
-pool: sample-pool
+pool: webmedias
 env:
   - DEBUG=true
