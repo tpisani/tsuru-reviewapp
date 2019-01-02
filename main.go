@@ -91,6 +91,7 @@ func main() {
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 		},
 	}
+
 	client := cmd.NewClient(httpClient, &cmd.Context{}, &cmd.Manager{})
 	execCommands(client)
 }
