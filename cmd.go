@@ -1,20 +1,14 @@
-package main
+package reviewapp
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/tsuru/tsuru/cmd"
 )
-
-type ResultSet struct {
-	Data    map[string]interface{}
-	Timeout time.Duration
-	err     error
-}
 
 type Command interface {
 	Run(newClient *cmd.Client) ResultSet
@@ -25,13 +19,13 @@ type AppInfoCommand struct{}
 
 func (p *AppInfoCommand) Run(client *cmd.Client) ResultSet {
 
-	url, err := cmd.GetURL(fmt.Sprintf("/apps/%s", configTsuru().BaseApp))
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s", ConfigTsuru().BaseApp))
 	if err != nil {
 		fmt.Println("unable to get URL from target")
 		os.Exit(1)
 	}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest(http.MethodGet, urlPath, nil)
 	if err != nil {
 		fmt.Println("unable to prepare request")
 		os.Exit(1)
@@ -74,14 +68,14 @@ type GetEnvCommand struct{}
 
 func (p *GetEnvCommand) Run(client *cmd.Client) ResultSet {
 
-	url, err = cmd.GetURL(fmt.Sprintf("/apps/%s/env", configTsuru().BaseApp))
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s/env", ConfigTsuru().BaseApp))
 
 	if err != nil {
 		fmt.Println("unable to get URL from target")
 		os.Exit(1)
 	}
 
-	req, _ = http.NewRequest(http.MethodGet, url, nil)
+	req, _ = http.NewRequest(http.MethodGet, urlPath, nil)
 	resp, err = client.Do(req)
 	fmt.Println(resp.Body)
 
@@ -96,7 +90,7 @@ func (p *GetEnvCommand) Run(client *cmd.Client) ResultSet {
 
 	json.NewDecoder(resp.Body).Decode(&envVars)
 
-	envVars = filterEnvVars(envVars, "NODE_ENV", "FEATURES")
+	envVars = FilterEnvVars(envVars, "NODE_ENV", "FEATURES")
 	envs := map[string]interface{}{
 		"envs": envVars,
 	}
@@ -107,15 +101,98 @@ func (p *GetEnvCommand) Run(client *cmd.Client) ResultSet {
 	return resultSet
 }
 
-/*
-type CreateCommand struct{}
-
-func (p *CreateCommand) Run() string {
-	return "CreateCommand"
+type CreateAppCommand struct {
+	IP            string
+	RepositoryURL string
+	Status        string
 }
+
+func (p *CreateAppCommand) Run(client *cmd.Client) ResultSet {
+
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps"))
+	if err != nil {
+		fmt.Println("unabCreateAppCommandle to get URL from target")
+		os.Exit(1)
+	}
+
+	data := App{}
+	data.TeamOwner = "backend_produtos_globosat"
+	data.Platform = "python"
+	data.Name = "review-app"
+	data.Pool = "globosat"
+
+	dataPost, err := json.Marshal(data)
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	req, _ = http.NewRequest(http.MethodPost, urlPath, bytes.NewBuffer(dataPost))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err = client.Do(req)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	defer resp.Body.Close()
+
+	appCreate := CreateAppCommand{}
+
+	json.NewDecoder(resp.Body).Decode(&appCreate)
+
+	dataResponse := map[string]interface{}{
+		"app-create": appCreate,
+	}
+	resultSet := ResultSet{
+		Data: dataResponse,
+	}
+
+	return resultSet
+}
+
+type DropAppCommand struct {
+	Message string
+}
+
+func (p *DropAppCommand) Run(client *cmd.Client) ResultSet {
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s", ConfigTsuru().BaseApp))
+	if err != nil {
+		fmt.Println("unableDropAppCommandle to get URL from target")
+		os.Exit(1)
+	}
+
+	req, _ = http.NewRequest(http.MethodDelete, urlPath, nil)
+	resp, err = client.Do(req)
+
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	defer resp.Body.Close()
+
+	dropAppCommand := DropAppCommand{}
+
+	json.NewDecoder(resp.Body).Decode(&dropAppCommand)
+
+	dataResponse := map[string]interface{}{
+		"app-drop": dropAppCommand,
+	}
+	resultSet := ResultSet{
+		Data: dataResponse,
+	}
+
+	return resultSet
+}
+
+/*
 func (p *CreateCommand) RoolBack() string {
 	return "RoolBack CreateCommand"
 }
+
+
 
 type BindCommand struct{}
 
@@ -145,10 +222,11 @@ func (p *DropCommand) RoolBack() string {
 	return "RoolBack DropCommand"
 }
 */
-func execByName(name string, client *cmd.Client) {
+func ExecByName(name string, client *cmd.Client) {
 	commands := map[string]Command{
 		"info": &AppInfoCommand{},
 		"env":  &GetEnvCommand{},
+		"drop": &DropAppCommand{},
 	}
 	if command := commands[name]; command == nil {
 		fmt.Println("No such command found, throw error?")
@@ -157,11 +235,13 @@ func execByName(name string, client *cmd.Client) {
 	}
 }
 
-func execCommands(client *cmd.Client) {
+func ExecCommands(client *cmd.Client) {
 	// Register commands
 	commands := [...]Command{
-		&AppInfoCommand{},
-		&GetEnvCommand{},
+		//&AppInfoCommand{},
+		//&GetEnvCommand{},
+		&CreateAppCommand{},
+		&DropAppCommand{},
 	}
 
 	for _, command := range commands {

@@ -1,41 +1,21 @@
-package main
+package reviewapp
 
 import (
-	"crypto/tls"
 	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/tsuru/tsuru/cmd"
 	yaml "gopkg.in/yaml.v2"
 )
 
-type AppInfoResponse struct {
-	Platform string
-	Pool     string
-	Name     string
-}
-
-type EnvVar struct {
-	Name   string
-	Value  string
-	Public bool
-}
-
-type ReviewAppConfig struct {
-	BaseApp string
-	Pool    string
-	EnvVars []string
-}
-
 var (
-	url  string
-	err  error
-	req  *http.Request
-	resp *http.Response
+	urlpath string
+	err     error
+	req     *http.Request
+	resp    *http.Response
 )
 
-func filterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
+func FilterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
 	filtered := make([]EnvVar, 0)
 
 	for _, name := range names {
@@ -52,7 +32,7 @@ func filterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
 	return filtered
 }
 
-func configTsuru() ReviewAppConfig {
+func ConfigTsuru() ReviewAppConfig {
 
 	token := os.Getenv("TSURU_TOKEN")
 	if token == "" {
@@ -83,15 +63,4 @@ func configTsuru() ReviewAppConfig {
 	f.Close()
 
 	return config
-}
-
-func main() {
-	httpClient := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
-
-	client := cmd.NewClient(httpClient, &cmd.Context{}, &cmd.Manager{})
-	execCommands(client)
 }
