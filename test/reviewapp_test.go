@@ -14,7 +14,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var client *cmd.Client
+var (
+	client           *cmd.Client
+	dropAppCommand   reviewapp.DropAppCommand
+	createAppCommand reviewapp.CreateAppCommand
+)
 
 func TestMain(m *testing.M) {
 	Init()
@@ -23,6 +27,7 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 func Init() {
+	fmt.Println("---- Init ----")
 	httpClient := &http.Client{
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
@@ -32,23 +37,21 @@ func Init() {
 }
 
 func Before() {
-
+	fmt.Println("---- Before ----")
+	//dropAppCommand := reviewapp.DropAppCommand{}
+	//dropAppCommand.Run(client)
 }
 func TestCreateAppReview(t *testing.T) {
 
 	createAppCommand := reviewapp.CreateAppCommand{}
-	dropAppCommand := reviewapp.DropAppCommand{}
-
 	resultSet := createAppCommand.Run(client)
 	builder := strings.Builder{}
+	builder.WriteString("review-app")
+	builder.WriteString(".gcloud.globoi.com")
 
 	for _, value := range resultSet.Data {
 		createCommand := value.(reviewapp.CreateAppCommand)
-		builder.WriteString(reviewapp.ConfigTsuru().BaseApp)
-		builder.WriteString(".gcloud.globoi.com")
-		fmt.Println(builder.String())
-		assert.Equal(t, builder.String(), createCommand.IP, "they should be equal")
-		assert.Equal(t, "success", createAppCommand.Status)
+		assert.Equal(t, "success", createCommand.Status)
+		assert.Equal(t, "review-app.gcloud.globoi.com", createCommand.IP, "they should be equal")
 	}
-	dropAppCommand.Run(client)
 }
