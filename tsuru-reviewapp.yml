@@ -1,4 +1,4 @@
-baseapp: sample-app
-pool: sample-pool
+baseapp: review-app
+pool: globosat
 env:
   - DEBUG=true
