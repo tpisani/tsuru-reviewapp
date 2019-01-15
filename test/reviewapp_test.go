@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 	reviewapp "tsuru-reviewapp"
@@ -22,9 +21,8 @@ var (
 
 func TestMain(m *testing.M) {
 	Init()
-	retCode := m.Run()
+	m.Run()
 	Before()
-	os.Exit(retCode)
 }
 func Init() {
 	fmt.Println("---- Init ----")
@@ -41,10 +39,12 @@ func Before() {
 	//dropAppCommand := reviewapp.DropAppCommand{}
 	//dropAppCommand.Run(client)
 }
+
 func TestCreateAppReview(t *testing.T) {
+	fmt.Println("---- TestCreateAppReview -------")
 
 	createAppCommand := reviewapp.CreateAppCommand{}
-	resultSet := createAppCommand.Run(client)
+	resultSet := createAppCommand.Run(client, reviewapp.ConfigTsuruTest())
 	builder := strings.Builder{}
 	builder.WriteString("review-app")
 	builder.WriteString(".gcloud.globoi.com")
@@ -53,5 +53,16 @@ func TestCreateAppReview(t *testing.T) {
 		createCommand := value.(reviewapp.CreateAppCommand)
 		assert.Equal(t, "success", createCommand.Status)
 		assert.Equal(t, "review-app.gcloud.globoi.com", createCommand.IP, "they should be equal")
+	}
+}
+
+func TestDropAppReview(t *testing.T) {
+	fmt.Println("---- TestDropAppReview -------")
+	dropAppCommand := reviewapp.DropAppCommand{}
+	resultSet := dropAppCommand.Run(client, reviewapp.ConfigTsuruTest())
+
+	for _, value := range resultSet.Data {
+		dropAppCommand := value.(reviewapp.DropAppCommand)
+		assert.True(t, strings.Contains(dropAppCommand.Message, "Removing application"))
 	}
 }
