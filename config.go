@@ -13,6 +13,9 @@ var (
 	err     error
 	req     *http.Request
 	resp    *http.Response
+	token   string
+	target  string
+	config  ReviewAppConfig
 )
 
 func FilterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
@@ -32,8 +35,7 @@ func FilterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
 	return filtered
 }
 
-func ConfigTsuru() ReviewAppConfig {
-
+func configToken() {
 	token := os.Getenv("TSURU_TOKEN")
 	if token == "" {
 		fmt.Println("missing Tsuru token")
@@ -46,50 +48,34 @@ func ConfigTsuru() ReviewAppConfig {
 		os.Exit(1)
 	}
 
-	f, err := os.Open("./tsuru-reviewapp.yml")
+}
+func ConfigTsuru() ReviewAppConfig {
+	configToken()
+	file, err := os.Open("./tsuru-reviewapp.yml")
 	if err != nil {
 		fmt.Println("no tsuru-reviewapp.yml")
 		os.Exit(1)
 	}
-
-	var config ReviewAppConfig
-	err = yaml.NewDecoder(f).Decode(&config)
-	if err != nil {
-		fmt.Println("unable to parse config file")
-		os.Exit(1)
-	}
-	f.Close()
-
-	return config
+	return getReviewAppConfig(config, file)
 }
 
 func ConfigTsuruTest() ReviewAppConfig {
-
-	token := os.Getenv("TSURU_TOKEN")
-	if token == "" {
-		fmt.Println("missing Tsuru token")
-		os.Exit(1)
-	}
-
-	target := os.Getenv("TSURU_TARGET")
-	if target == "" {
-		fmt.Println("missing Tsuru target")
-		os.Exit(1)
-	}
-
-	f, err := os.Open("../tsuru-reviewapp.yml")
+	configToken()
+	file, err := os.Open("../tsuru-reviewapp.yml")
 	if err != nil {
 		fmt.Println("no tsuru-reviewapp.yml")
 		os.Exit(1)
 	}
 
-	var config ReviewAppConfig
-	err = yaml.NewDecoder(f).Decode(&config)
+	return getReviewAppConfig(config, file)
+}
+
+func getReviewAppConfig(config ReviewAppConfig, file *os.File) ReviewAppConfig {
+	err = yaml.NewDecoder(file).Decode(&config)
 	if err != nil {
 		fmt.Println("unable to parse config file")
 		os.Exit(1)
 	}
-	f.Close()
-
+	file.Close()
 	return config
 }
