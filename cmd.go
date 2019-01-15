@@ -11,15 +11,15 @@ import (
 )
 
 type Command interface {
-	Run(newClient *cmd.Client) ResultSet
+	Run(newClient *cmd.Client, review ReviewAppConfig) ResultSet
 	//RoolBack() string
 }
 
 type AppInfoCommand struct{}
 
-func (p *AppInfoCommand) Run(client *cmd.Client) ResultSet {
+func (p *AppInfoCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultSet {
 
-	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s", ConfigTsuru().BaseApp))
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s", review.BaseApp))
 	if err != nil {
 		fmt.Println("unable to get URL from target")
 		os.Exit(1)
@@ -66,9 +66,9 @@ func (p *AppInfoCommand) Run(client *cmd.Client) ResultSet {
 
 type GetEnvCommand struct{}
 
-func (p *GetEnvCommand) Run(client *cmd.Client) ResultSet {
+func (p *GetEnvCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultSet {
 
-	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s/env", ConfigTsuru().BaseApp))
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s/env", review.BaseApp))
 
 	if err != nil {
 		fmt.Println("unable to get URL from target")
@@ -107,7 +107,7 @@ type CreateAppCommand struct {
 	Status        string
 }
 
-func (p *CreateAppCommand) Run(client *cmd.Client) ResultSet {
+func (p *CreateAppCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultSet {
 
 	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps"))
 	if err != nil {
@@ -156,13 +156,12 @@ type DropAppCommand struct {
 	Message string
 }
 
-func (p *DropAppCommand) Run(client *cmd.Client) ResultSet {
-	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s", ConfigTsuru().BaseApp))
+func (p *DropAppCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultSet {
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/apps/%s", review.BaseApp))
 	if err != nil {
 		fmt.Println("unableDropAppCommandle to get URL from target")
 		os.Exit(1)
 	}
-
 	req, _ = http.NewRequest(http.MethodDelete, urlPath, nil)
 	resp, err = client.Do(req)
 
@@ -231,7 +230,7 @@ func ExecByName(name string, client *cmd.Client) {
 	if command := commands[name]; command == nil {
 		fmt.Println("No such command found, throw error?")
 	} else {
-		command.Run(client)
+		command.Run(client, ConfigTsuru())
 	}
 }
 
@@ -240,11 +239,11 @@ func ExecCommands(client *cmd.Client) {
 	commands := [...]Command{
 		//&AppInfoCommand{},
 		//&GetEnvCommand{},
-		&CreateAppCommand{},
+		//&CreateAppCommand{},
 		&DropAppCommand{},
 	}
 
 	for _, command := range commands {
-		fmt.Println(command.Run(client))
+		fmt.Println(command.Run(client, ConfigTsuru()))
 	}
 }
