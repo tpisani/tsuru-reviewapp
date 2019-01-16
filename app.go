@@ -186,41 +186,6 @@ func (p *DropAppCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultS
 	return resultSet
 }
 
-/*
-func (p *CreateCommand) RoolBack() string {
-	return "RoolBack CreateCommand"
-}
-
-
-
-type BindCommand struct{}
-
-func (p *BindCommand) Run() string {
-	return "BindCommand"
-}
-func (p *BindCommand) RoolBack() string {
-	return "RoolBack BindCommand"
-}
-
-type UnBindCommand struct{}
-
-func (p *UnBindCommand) Run() string {
-	return "UnBindCommand"
-}
-func (p *UnBindCommand) RoolBack() string {
-	return "RoolBack UnBindCommand"
-}
-
-type DropCommand struct{}
-
-func (p *DropCommand) Run() string {
-	return "DropCommand"
-}
-
-func (p *DropCommand) RoolBack() string {
-	return "RoolBack DropCommand"
-}
-*/
 func ExecByName(name string, client *cmd.Client) {
 	commands := map[string]Command{
 		"info": &AppInfoCommand{},
@@ -240,7 +205,7 @@ func ExecCommands(client *cmd.Client) {
 		//&AppInfoCommand{},
 		//&GetEnvCommand{},
 		//&CreateAppCommand{},
-		&DropAppCommand{},
+		&AddServiceAppCommand{},
 	}
 
 	for _, command := range commands {
