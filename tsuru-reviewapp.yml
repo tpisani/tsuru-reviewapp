@@ -2,3 +2,5 @@ baseapp: review-app
 pool: globosat
 env:
   - DEBUG=true
+
+service: tsuru-dbaas-dev

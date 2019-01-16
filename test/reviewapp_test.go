@@ -45,14 +45,12 @@ func TestCreateAppReview(t *testing.T) {
 
 	createAppCommand := reviewapp.CreateAppCommand{}
 	resultSet := createAppCommand.Run(client, reviewapp.ConfigTsuruTest())
-	builder := strings.Builder{}
-	builder.WriteString("review-app")
-	builder.WriteString(".gcloud.globoi.com")
+	var pathURL = fmt.Sprintf("%s.gcloud.globoi.com", reviewapp.ConfigTsuruTest().BaseApp)
 
 	for _, value := range resultSet.Data {
 		createCommand := value.(reviewapp.CreateAppCommand)
 		assert.Equal(t, "success", createCommand.Status)
-		assert.Equal(t, "review-app.gcloud.globoi.com", createCommand.IP, "they should be equal")
+		assert.Equal(t, pathURL, createCommand.IP, "they should be equal")
 	}
 }
 

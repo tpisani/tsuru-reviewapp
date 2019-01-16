@@ -9,6 +9,13 @@ type App struct {
 	Pool      string `json:"Pool"`
 }
 
+type Service struct {
+	PlanName    string `json:"plan"`
+	Owner       string `json:"owner"`
+	Description string `json:"Description"`
+	Name        string `json:"Name"`
+}
+
 type AppInfoResponse struct {
 	Platform string
 	Pool     string
@@ -25,6 +32,7 @@ type ReviewAppConfig struct {
 	BaseApp string
 	Pool    string
 	EnvVars []string
+	Service string
 }
 
 type ResultSet struct {
