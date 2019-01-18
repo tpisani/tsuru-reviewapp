@@ -12,7 +12,6 @@ import (
 
 type Command interface {
 	Run(newClient *cmd.Client, review ReviewAppConfig) ResultSet
-	//RoolBack() string
 }
 
 type AppInfoCommand struct{}
@@ -200,7 +199,7 @@ func ExecByName(name string, client *cmd.Client) {
 }
 
 func ExecCommands(client *cmd.Client) {
-	// Register commands
+
 	commands := [...]Command{
 		//&AppInfoCommand{},
 		//&GetEnvCommand{},
