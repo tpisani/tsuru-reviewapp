@@ -22,7 +22,7 @@ func (p *AddServiceAppCommand) Run(client *cmd.Client, review ReviewAppConfig) R
 	}
 
 	data := Service{}
-	data.Name = "mysql_instance_review_app3"
+	data.Name = "mysql_instance_review_app6"
 	data.Description = "banco mysql para teste"
 	data.Owner = "backend_produtos_globosat"
 	data.PlanName = "mysql-tiny-single-node-rjdev-dev"
@@ -45,7 +45,7 @@ func (p *AddServiceAppCommand) Run(client *cmd.Client, review ReviewAppConfig) R
 	defer resp.Body.Close()
 
 	dataResponse := map[string]interface{}{
-		"status": resp.Status,
+		"status": resp.StatusCode,
 	}
 	resultSet := ResultSet{
 		Data: dataResponse,

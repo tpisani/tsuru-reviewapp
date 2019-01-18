@@ -4,8 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"net/http"
-	"os"
-	"strconv"
 	"strings"
 	"testing"
 	reviewapp "tsuru-reviewapp"
@@ -66,13 +64,9 @@ func TestCommandServiceAdd(t *testing.T) {
 
 	for _, value := range resultSet.Data {
 
-		statusCode := value.(string)
-		status, err := strconv.Atoi(statusCode)
-		if err != nil {
-			fmt.Println("parse string for int error")
-			os.Exit(1)
-		}
-		assert.Equal(t, http.StatusCreated, status)
+		statusCode := value.(int)
+		fmt.Println(statusCode)
+		assert.Equal(t, http.StatusCreated, statusCode)
 	}
 }
 
