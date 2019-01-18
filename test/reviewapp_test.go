@@ -40,22 +40,34 @@ func Before() {
 	//dropAppCommand.Run(client)
 }
 
-func TestCreateAppReview(t *testing.T) {
-	fmt.Println("---- TestCreateAppReview -------")
+// func TestCreateAppReview(t *testing.T) {
+// 	fmt.Println("---- TestCreateAppReview -------")
 
-	createAppCommand := reviewapp.CreateAppCommand{}
-	resultSet := createAppCommand.Run(client, reviewapp.ConfigTsuruTest())
-	var pathURL = fmt.Sprintf("%s.gcloud.globoi.com", reviewapp.ConfigTsuruTest().BaseApp)
+// 	createAppCommand := reviewapp.CreateAppCommand{}
+// 	resultSet := createAppCommand.Run(client, reviewapp.ConfigTsuruTest())
+// 	var pathURL = fmt.Sprintf("%s.gcloud.globoi.com", reviewapp.ConfigTsuruTest().BaseApp)
+
+// 	for _, value := range resultSet.Data {
+// 		createCommand := value.(reviewapp.CreateAppCommand)
+// 		assert.Equal(t, "success", createCommand.Status)
+// 		assert.Equal(t, pathURL, createCommand.IP, "they should be equal")
+// 	}
+// }
+func TestCommandServiceAdd(t *testing.T) {
+	fmt.Println("---- TestCommandServiceAdd -------")
+
+	serviceAddCommand := reviewapp.AddServiceAppCommand{}
+	resultSet := serviceAddCommand.Run(client, reviewapp.ConfigTsuruTest())
 
 	for _, value := range resultSet.Data {
-		createCommand := value.(reviewapp.CreateAppCommand)
-		assert.Equal(t, "success", createCommand.Status)
-		assert.Equal(t, pathURL, createCommand.IP, "they should be equal")
+		serviceCommand := value.(reviewapp.AddServiceAppCommand)
+		assert.Equal(t, http.StatusCreated, serviceCommand.Message)
 	}
 }
 
-func TestDropAppReview(t *testing.T) {
-	fmt.Println("---- TestDropAppReview -------")
+func TestCommandDropApp(t *testing.T) {
+	fmt.Println("---- TestCommandDropApp -------")
+
 	dropAppCommand := reviewapp.DropAppCommand{}
 	resultSet := dropAppCommand.Run(client, reviewapp.ConfigTsuruTest())
 
