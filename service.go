@@ -11,6 +11,7 @@ import (
 )
 
 type AddServiceAppCommand struct {
+	Message string
 }
 
 func (p *AddServiceAppCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultSet {
@@ -21,7 +22,7 @@ func (p *AddServiceAppCommand) Run(client *cmd.Client, review ReviewAppConfig) R
 	}
 
 	data := Service{}
-	data.Name = "mysql_instance_review_app"
+	data.Name = "mysql_instance_review_app3"
 	data.Description = "banco mysql para teste"
 	data.Owner = "backend_produtos_globosat"
 	data.PlanName = "mysql-tiny-single-node-rjdev-dev"

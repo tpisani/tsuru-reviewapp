@@ -55,6 +55,9 @@ func Before() {
 // 		assert.Equal(t, pathURL, createCommand.IP, "they should be equal")
 // 	}
 // }
+
+/// dbaas services criam bases e o nome permanece no sistema verificar uma possibilidade de gerar um nomenclatura que
+// seria facil de apagar  pela equipe posteriormente
 func TestCommandServiceAdd(t *testing.T) {
 	fmt.Println("---- TestCommandServiceAdd -------")
 
