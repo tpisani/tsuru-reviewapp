@@ -8,9 +8,8 @@ import (
 	"testing"
 	reviewapp "tsuru-reviewapp"
 
-	"github.com/tsuru/tsuru/cmd"
-
 	"github.com/stretchr/testify/assert"
+	"github.com/tsuru/tsuru/cmd"
 )
 
 var (
@@ -66,33 +65,5 @@ func TestCommandDropApp(t *testing.T) {
 	for _, value := range resultSet.Data {
 		dropAppCommand := value.(reviewapp.DropAppCommand)
 		assert.True(t, strings.Contains(dropAppCommand.Message, "Removing application"))
-	}
-}
-
-func TestCommandServiceAdd(t *testing.T) {
-	fmt.Println("---- TestCommandServiceAdd -------")
-
-	serviceAddCommand := reviewapp.AddServiceAppCommand{}
-	resultSet := serviceAddCommand.Run(client, reviewapp.ConfigTsuruTest())
-
-	for _, value := range resultSet.Data {
-
-		statusCode := value.(int)
-		fmt.Println(statusCode)
-		assert.Equal(t, http.StatusCreated, statusCode)
-	}
-}
-
-func TestCommandServiceRemove(t *testing.T) {
-	fmt.Println("---- TestCommandServiceRemove -------")
-
-	serviceRemoveCommand := reviewapp.RemoveServiceAppCommand{}
-	resultSet := serviceRemoveCommand.Run(client, reviewapp.ConfigTsuruTest())
-
-	for _, value := range resultSet.Data {
-
-		statusCode := value.(int)
-		fmt.Println(statusCode)
-		assert.Equal(t, http.StatusOK, statusCode)
 	}
 }

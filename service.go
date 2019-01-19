@@ -14,19 +14,19 @@ type AddServiceAppCommand struct {
 }
 
 func (p *AddServiceAppCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultSet {
-	urlPath, err := cmd.GetURL(fmt.Sprintf("/services/%s/instances", review.Service))
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/services/%s/instances", review.Dbaas.Service))
 	if err != nil {
 		fmt.Println("AddServiceAppCommand to get URL from target")
 		os.Exit(1)
 	}
 
-	fmt.Println(review.ServiceName)
+	fmt.Println(review.Dbaas.ServiceName)
 
 	data := Service{}
-	data.Name = review.ServiceName
+	data.Name = review.Dbaas.ServiceName
 	data.Description = "banco mysql para teste"
-	data.Owner = "backend_produtos_globosat"
-	data.PlanName = "mysql-tiny-single-node-rjdev-dev"
+	data.Owner = review.Dbaas.TeamOwner
+	data.PlanName = review.Dbaas.PlanName
 
 	dataPost, err := json.Marshal(data)
 	if err != nil {
@@ -60,7 +60,7 @@ type RemoveServiceAppCommand struct {
 
 func (p *RemoveServiceAppCommand) Run(client *cmd.Client, review ReviewAppConfig) ResultSet {
 
-	urlPath, err := cmd.GetURL(fmt.Sprintf("/services/%s/instances/%s", review.Service, review.ServiceName))
+	urlPath, err := cmd.GetURL(fmt.Sprintf("/services/%s/instances/%s", review.Dbaas.Service, review.Dbaas.ServiceName))
 
 	if err != nil {
 		fmt.Println("unable RemoveServiceAppCommand to get URL from target")

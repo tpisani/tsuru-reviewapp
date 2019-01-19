@@ -29,13 +29,18 @@ type EnvVar struct {
 }
 
 type ReviewAppConfig struct {
-	BaseApp     string
-	Pool        string
-	EnvVars     []string
-	Service     string
-	ServiceName string `yaml:"service-name"`
-}
+	BaseApp string
+	Pool    string
+	EnvVars []string
 
+	Dbaas DbaasMySQL `yaml:"dbaas-mysql"`
+}
+type DbaasMySQL struct {
+	Service     string `yaml:"service"`
+	ServiceName string `yaml:"service-name"`
+	PlanName    string `yaml:"plan-name"`
+	TeamOwner   string `yaml:"team-owner"`
+}
 type ResultSet struct {
 	Data    map[string]interface{}
 	Timeout time.Duration
