@@ -3,5 +3,8 @@ pool: globosat
 env:
   - DEBUG=true
 
-service: tsuru-dbaas-dev
-service-name: mysql_instance_review_app7
+dbaas-mysql:
+  service: tsuru-dbaas-dev
+  service-name: mysql_instance_review_app7
+  team-owner: backend_produtos_globosat
+  plan-name: mysql-tiny-single-node-rjdev-dev
