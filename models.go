@@ -29,10 +29,11 @@ type EnvVar struct {
 }
 
 type ReviewAppConfig struct {
-	BaseApp string
-	Pool    string
-	EnvVars []string
-	Service string
+	BaseApp     string
+	Pool        string
+	EnvVars     []string
+	Service     string
+	ServiceName string `yaml:"service-name"`
 }
 
 type ResultSet struct {

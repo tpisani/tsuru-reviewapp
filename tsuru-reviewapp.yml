@@ -4,3 +4,4 @@ env:
   - DEBUG=true
 
 service: tsuru-dbaas-dev
+service-name: mysql_instance_review_app7
