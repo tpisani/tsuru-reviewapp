@@ -40,22 +40,35 @@ func Before() {
 	//dropAppCommand.Run(client)
 }
 
-// func TestCreateAppReview(t *testing.T) {
-// 	fmt.Println("---- TestCreateAppReview -------")
+func TestCreateAppReview(t *testing.T) {
+	fmt.Println("---- TestCreateAppReview -------")
 
-// 	createAppCommand := reviewapp.CreateAppCommand{}
-// 	resultSet := createAppCommand.Run(client, reviewapp.ConfigTsuruTest())
-// 	var pathURL = fmt.Sprintf("%s.gcloud.globoi.com", reviewapp.ConfigTsuruTest().BaseApp)
+	createAppCommand := reviewapp.CreateAppCommand{}
+	resultSet := createAppCommand.Run(client, reviewapp.ConfigTsuruTest())
+	var pathURL = fmt.Sprintf("%s.gcloud.globoi.com", reviewapp.ConfigTsuruTest().BaseApp)
 
-// 	for _, value := range resultSet.Data {
-// 		createCommand := value.(reviewapp.CreateAppCommand)
-// 		assert.Equal(t, "success", createCommand.Status)
-// 		assert.Equal(t, pathURL, createCommand.IP, "they should be equal")
-// 	}
-// }
+	for _, value := range resultSet.Data {
+		createCommand := value.(reviewapp.CreateAppCommand)
+		assert.Equal(t, "success", createCommand.Status)
+		assert.Equal(t, pathURL, createCommand.IP, "they should be equal")
+	}
+}
 
-/// dbaas services criam bases e o nome permanece no sistema verificar uma possibilidade de gerar um nomenclatura que
-// seria facil de apagar  pela equipe posteriormente
+// dbaas services criam bases e o nome permanece no sistema verificar uma possibilidade de gerar um nomenclatura que
+//seria facil de apagar  pela equipe posteriormente
+
+func TestCommandDropApp(t *testing.T) {
+	fmt.Println("---- TestCommandDropApp -------")
+
+	dropAppCommand := reviewapp.DropAppCommand{}
+	resultSet := dropAppCommand.Run(client, reviewapp.ConfigTsuruTest())
+
+	for _, value := range resultSet.Data {
+		dropAppCommand := value.(reviewapp.DropAppCommand)
+		assert.True(t, strings.Contains(dropAppCommand.Message, "Removing application"))
+	}
+}
+
 func TestCommandServiceAdd(t *testing.T) {
 	fmt.Println("---- TestCommandServiceAdd -------")
 
@@ -70,14 +83,16 @@ func TestCommandServiceAdd(t *testing.T) {
 	}
 }
 
-func TestCommandDropApp(t *testing.T) {
-	fmt.Println("---- TestCommandDropApp -------")
+func TestCommandServiceRemove(t *testing.T) {
+	fmt.Println("---- TestCommandServiceRemove -------")
 
-	dropAppCommand := reviewapp.DropAppCommand{}
-	resultSet := dropAppCommand.Run(client, reviewapp.ConfigTsuruTest())
+	serviceRemoveCommand := reviewapp.RemoveServiceAppCommand{}
+	resultSet := serviceRemoveCommand.Run(client, reviewapp.ConfigTsuruTest())
 
 	for _, value := range resultSet.Data {
-		dropAppCommand := value.(reviewapp.DropAppCommand)
-		assert.True(t, strings.Contains(dropAppCommand.Message, "Removing application"))
+
+		statusCode := value.(int)
+		fmt.Println(statusCode)
+		assert.Equal(t, http.StatusOK, statusCode)
 	}
 }
