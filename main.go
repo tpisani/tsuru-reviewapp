@@ -3,75 +3,25 @@ package main
 import (
 	"crypto/tls"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 	"os"
 
-	"github.com/go-yaml/yaml"
 	"github.com/tsuru/tsuru/cmd"
 )
 
-type AppInfoResponse struct {
-	Platform string
-	Pool     string
-}
-
-type EnvVar struct {
-	Name   string
-	Value  string
-	Public bool
-}
-
-type ReviewAppConfig struct {
-	BaseApp string
-	Pool    string
-	EnvVars []string
-}
-
-func filterEnvVars(envVars []EnvVar, names ...string) []EnvVar {
-	filtered := make([]EnvVar, 0)
-
-	for _, name := range names {
-		for _, v := range envVars {
-			if v.Public && v.Name == name {
-				filtered = append(filtered, EnvVar{
-					Name:   v.Name,
-					Value:  v.Value,
-					Public: v.Public,
-				})
-			}
-		}
-	}
-
-	return filtered
-}
+const appName = "test-app-01"
 
 func main() {
-	token := os.Getenv("TSURU_TOKEN")
-	if token == "" {
-		fmt.Println("missing Tsuru token")
-		os.Exit(1)
-	}
+	var configPath string
+	flag.StringVar(&configPath, "config", "tsuru-reviewapp.yml", "path of config file")
 
-	target := os.Getenv("TSURU_TARGET")
-	if target == "" {
-		fmt.Println("missing Tsuru target")
-		os.Exit(1)
-	}
-
-	f, err := os.Open("./tsuru-reviewapp.yml")
+	config, err := ParseConfig(configPath)
 	if err != nil {
-		fmt.Println("no tsuru-reviewapp.yml")
+		fmt.Println(err)
 		os.Exit(1)
 	}
-
-	var config ReviewAppConfig
-	err = yaml.NewDecoder(f).Decode(&config)
-	if err != nil {
-		fmt.Println("unable to parse config file")
-		os.Exit(1)
-	}
-	f.Close()
 
 	httpClient := &http.Client{
 		Transport: &http.Transport{
@@ -83,13 +33,13 @@ func main() {
 
 	u, err := cmd.GetURL(fmt.Sprintf("/apps/%s", config.BaseApp))
 	if err != nil {
-		fmt.Println("unable to get URL from target")
+		fmt.Printf("unable to get URL from target: %v\n", err)
 		os.Exit(1)
 	}
 
 	req, err := http.NewRequest(http.MethodGet, u, nil)
 	if err != nil {
-		fmt.Println("unable to prepare request")
+		fmt.Printf("unable to prepare request: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -98,19 +48,177 @@ func main() {
 		fmt.Printf("unable to fetch app info: %v\n", err)
 		os.Exit(1)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("non-200 response from Tsuru")
-		os.Exit(1)
-	}
-
-	var data AppInfoResponse
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	var appInfo AppInfo
+	err = json.NewDecoder(resp.Body).Decode(&appInfo)
 	if err != nil {
 		fmt.Printf("unable to parse app info: %v\n", err)
 		os.Exit(1)
 	}
+	resp.Body.Close()
 
-	fmt.Println(data.Platform, data.Pool)
+	u, err = cmd.GetURL(fmt.Sprintf("/apps/%s/env", config.BaseApp))
+	if err != nil {
+		fmt.Printf("unable to get URL from target: %v\n", err)
+		os.Exit(1)
+	}
+
+	req, err = http.NewRequest(http.MethodGet, u, nil)
+	if err != nil {
+		fmt.Printf("unable to prepare request: %v\n", err)
+		os.Exit(1)
+	}
+
+	resp, err = client.Do(req)
+	if err != nil {
+		fmt.Printf("unable to fetch app env vars: %v\n", err)
+		os.Exit(1)
+	}
+
+	var baseEnvVars []EnvVar
+	err = json.NewDecoder(resp.Body).Decode(&baseEnvVars)
+	if err != nil {
+		fmt.Printf("unable to parse app info: %v\n", err)
+		os.Exit(1)
+	}
+	resp.Body.Close()
+
+	baseEnv := make(Env)
+	for _, envVar := range baseEnvVars {
+		baseEnv[envVar.Name] = EnvVar{
+			Name:   envVar.Name,
+			Value:  envVar.Value,
+			Public: envVar.Public,
+		}
+	}
+
+	env, errs := MergeEnvs(baseEnv, config.Env)
+	if errs != nil {
+		for _, err := range errs {
+			fmt.Printf("unable to collect env vars from config: %v\n", err)
+		}
+		os.Exit(1)
+	}
+	fmt.Printf("%+v\n", env)
+
+	// u, err = cmd.GetURL(fmt.Sprintf("/services/instances?app=%s", config.BaseApp))
+	// if err != nil {
+	// 	fmt.Printf("unable to get URL from target: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// fmt.Println(u)
+
+	// req, err = http.NewRequest(http.MethodGet, u, nil)
+	// if err != nil {
+	// 	fmt.Printf("unable to prepare request: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// resp, err = client.Do(req)
+	// if err != nil {
+	// 	fmt.Printf("unable to fetch service instances: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// var services []Service
+	// err = json.NewDecoder(resp.Body).Decode(&services)
+	// if err != nil {
+	// 	fmt.Printf("unable to parse service list: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// services = FilterServices(services)
+	// fmt.Println(services)
+
+	// u, err = cmd.GetURL("/apps")
+	// if err != nil {
+	// 	fmt.Printf("unable to get URL from target: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// data := struct {
+	// 	Name        string `json:"name"`
+	// 	Platform    string `json:"platform"`
+	// 	Plan        string `json:"plan"`
+	// 	TeamOwner   string `json:"teamOwner"`
+	// 	Pool        string `json:"pool"`
+	// 	Router      string `json:"router"`
+	// 	Description string `json:"description"`
+	// }{
+	// 	Name:        appName,
+	// 	Platform:    appInfo.Platform,
+	// 	Plan:        "small",
+	// 	TeamOwner:   appInfo.TeamOwner,
+	// 	Pool:        appInfo.Pool,
+	// 	Router:      appInfo.Router,
+	// 	Description: appInfo.Description,
+	// }
+
+	// fmt.Printf("%+v\n", data)
+
+	// b := &bytes.Buffer{}
+	// err = json.NewEncoder(b).Encode(data)
+	// if err != nil {
+	// 	fmt.Printf("unable to build app create payload: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// req, err = http.NewRequest(http.MethodPost, u, b)
+	// if err != nil {
+	// 	fmt.Printf("unable to prepare request: %v\n", err)
+	// 	os.Exit(1)
+	// }
+	// req.Header.Set("Content-Type", "application/json")
+
+	// fmt.Println("Creating review app...")
+
+	// _, err = client.Do(req)
+	// if err != nil {
+	// 	fmt.Printf("unable to create app: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// u, err = cmd.GetURL(fmt.Sprintf("/apps/%s/env", appName))
+	// if err != nil {
+	// 	fmt.Printf("unable to get URL from target: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// var envVars []EnvVar
+	// for _, envVar := range env {
+	// 	envVars = append(envVars, envVar)
+	// }
+
+	// envPayload := struct {
+	// 	Envs      []EnvVar
+	// 	NoRestart bool
+	// 	Private   bool
+	// }{
+	// 	Envs:      envVars,
+	// 	NoRestart: true,
+	// 	Private:   false,
+	// }
+
+	// buf := &bytes.Buffer{}
+	// err = json.NewEncoder(buf).Encode(envPayload)
+	// if err != nil {
+	// 	fmt.Printf("unable to build env vars payload: %v\n", err)
+	// 	os.Exit(1)
+	// }
+
+	// req, err = http.NewRequest(http.MethodPost, u, buf)
+	// if err != nil {
+	// 	fmt.Printf("unable to prepare request: %v\n", err)
+	// 	os.Exit(1)
+	// }
+	// req.Header.Set("Content-Type", "application/json")
+
+	// fmt.Println("Settings env vars...")
+
+	// _, err = client.Do(req)
+	// if err != nil {
+	// 	fmt.Printf("unable to set env vars: %v\n", err)
+	// 	os.Exit(1)
+	// }
 }

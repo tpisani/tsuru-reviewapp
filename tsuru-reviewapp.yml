@@ -1,4 +1,14 @@
-baseapp: sample-app
+baseapp: apocalypse-green
 pool: sample-pool
 env:
-  - DEBUG=true
+  FEATURES:
+    inherit: true
+  NODE_ENV:
+    value: development
+  CACHE:
+    value: none
+services:
+  tsuru-dbaas:
+    plan: redis-4-0-small-ha-sentinel-memory-only-rjcme-prod
+  swift-prod:
+    plan: default
